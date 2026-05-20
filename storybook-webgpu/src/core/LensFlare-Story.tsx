@@ -1,8 +1,8 @@
 import { Environment, OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { Suspense, type FC } from 'react'
-import { pass, toneMapping, uniform } from 'three/tsl'
-import { RenderPipeline, type Renderer } from 'three/webgpu'
+import { bool, pass, toneMapping, uniform } from 'three/tsl'
+import { RenderPipeline, type Node, type Renderer } from 'three/webgpu'
 
 import { dithering, lensFlare } from '@takram/three-geospatial/webgpu'
 
@@ -17,6 +17,7 @@ import {
   type ToneMappingArgs
 } from '../controls/toneMappingControls'
 import { AgXPunchyToneMapping } from '../helpers/AgxToneMapping'
+import { useControl } from '../hooks/useControl'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 import { useResource } from '../hooks/useResource'
 import { useTransientControl } from '../hooks/useTransientControl'
@@ -40,9 +41,30 @@ const Content: FC<StoryProps> = () => {
     [lensFlareNode]
   )
 
-  const renderPipeline = useResource(
-    () => new RenderPipeline(renderer, toneMappingNode.add(dithering)),
-    [renderer, toneMappingNode]
+  const debugLensFlare = useControl(
+    ({ enable, debug }: StoryArgs) => enable && debug
+  )
+
+  const renderPipeline = useResource(() => {
+    let outputNode: Node = toneMappingNode.add(dithering)
+
+    // Useless conditional to keep the main path in the graph:
+    if (debugLensFlare) {
+      outputNode = bool(true).select(
+        lensFlareNode.getDebugInternalTexturesNode(),
+        outputNode
+      )
+    }
+
+    return new RenderPipeline(renderer, outputNode)
+  }, [renderer, lensFlareNode, toneMappingNode, debugLensFlare])
+
+  useTransientControl(
+    ({ enable }: StoryArgs) => enable,
+    value => {
+      toneMappingNode.colorNode = value ? lensFlareNode : colorNode
+      renderPipeline.needsUpdate = true
+    }
   )
 
   useTransientControl(
@@ -95,6 +117,8 @@ const Content: FC<StoryProps> = () => {
 interface StoryProps {}
 
 interface StoryArgs extends ToneMappingArgs {
+  enable: boolean
+  debug: boolean
   bloomIntensity: number
   glareIntensity: number
   ghostIntensity: number
@@ -110,10 +134,12 @@ export const Story: StoryFC<StoryProps, StoryArgs> = props => (
 )
 
 Story.args = {
+  enable: true,
   bloomIntensity: 0.3,
   glareIntensity: 1,
   ghostIntensity: 0.005,
   haloIntensity: 0.005,
+  debug: false,
   wireframe: false,
   ...toneMappingArgs({
     toneMappingExposure: 1
@@ -122,6 +148,11 @@ Story.args = {
 }
 
 Story.argTypes = {
+  enable: {
+    control: {
+      type: 'boolean'
+    }
+  },
   bloomIntensity: {
     control: {
       type: 'range',
@@ -153,6 +184,11 @@ Story.argTypes = {
       min: 0,
       max: 0.1,
       step: 0.001
+    }
+  },
+  debug: {
+    control: {
+      type: 'boolean'
     }
   },
   wireframe: {

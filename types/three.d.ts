@@ -145,9 +145,9 @@ declare module 'three/src/nodes/accessors/TextureNode.js' {
     sample(uvNode: Node): TextureNode
     load(uvNode: Node): TextureNode
     blur(amountNode: Node): TextureNode
-    level(levelNode: Node): TextureNode
-    size(levelNode: Node): TextureNode
-    size(levelNode?: Node): TextureNode
+    level(levelNode: Node | number): TextureNode
+    size(levelNode: Node | number): TextureNode
+    size(levelNode?: Node | number): TextureNode
     bias(biasNode: Node): TextureNode
     offset(biasNode: Node): TextureNode
   }

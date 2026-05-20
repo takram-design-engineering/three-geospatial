@@ -1,4 +1,16 @@
-import { add, Fn, uniform } from 'three/tsl'
+import {
+  add,
+  Fn,
+  luminance,
+  mix,
+  texture,
+  uniform,
+  uv,
+  vec2,
+  vec3,
+  vec4,
+  viewportSize
+} from 'three/tsl'
 import { TempNode, type NodeBuilder, type TextureNode } from 'three/webgpu'
 import invariant from 'tiny-invariant'
 
@@ -96,6 +108,44 @@ export class LensFlareNode extends TempNode {
       }
       return output.add(features)
     })()
+  }
+
+  getDebugInternalTexturesNode(uvNode: Node<'vec2'> = uv()): Node<'vec3'> {
+    const threshold = this.thresholdNode.getTextureNode()
+    const blur = this.blurNode.getTextureNode()
+    const bloom = this.bloomNode.getTextureNode()
+    const features = this.featuresNode.getTextureNode()
+    const glare = this.glareNode.getTextureNode()
+
+    const uv = vec4(uvNode, uvNode.sub(0.5)).mul(2).toConst()
+    const quadTexture = texture(this.glareNode.quadTexture)
+    const quadSize = vec2(quadTexture.size().mul(4)).div(viewportSize)
+    return uvNode.y
+      .lessThan(0.5)
+      .select(
+        uvNode.x
+          .lessThan(0.5)
+          .select(
+            mix(
+              blur.sample(uv.xy).rgb,
+              vec3(1, 0, 0),
+              luminance(threshold.sample(uv.xy).rgb).saturate()
+            ),
+            bloom.sample(uv.zy).rgb
+          ),
+        uvNode.x
+          .lessThan(0.5)
+          .select(
+            features.sample(uv.xw).rgb,
+            glare
+              .sample(uv.zw)
+              .rgb.add(
+                quadTexture
+                  .sample(uv.zw.div(quadSize))
+                  .rgb.mul(uv.zw.lessThan(quadSize).all())
+              )
+          )
+      ).rgb
   }
 
   override dispose(): void {
