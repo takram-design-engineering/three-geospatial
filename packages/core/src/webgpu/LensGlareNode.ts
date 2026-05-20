@@ -113,7 +113,7 @@ export class LensGlareNode extends FilterNode {
   wireframe = false
 
   intensity = uniform(1e-5)
-  sizeScale = uniform(new Vector2(1.5, 0.01)) // length, width
+  sizeScale = uniform(new Vector2(1, 0.01)) // length, width
   luminanceThreshold = uniform(100)
 
   private computeNode?: ComputeNode
