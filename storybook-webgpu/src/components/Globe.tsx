@@ -1,23 +1,33 @@
+import { extend, type ThreeElement } from '@react-three/fiber'
 import type { TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
 import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
 import {
   GLTFExtensionsPlugin,
   GoogleCloudAuthPlugin,
-  TileCompressionPlugin,
-  UpdateOnChangePlugin
+  TileCompressionPlugin
 } from '3d-tiles-renderer/plugins'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { useEffect, useState, type FC, type ReactNode, type Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import type { Material } from 'three'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
+import { BundleGroup } from 'three/webgpu'
 
 import { radians } from '@takram/three-geospatial'
 
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
+import { UpdateOnChangeBundlePlugin } from '../plugins/UpdateOnChangeBundlePlugin'
 import { connectToDescription } from './Description'
+
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    bundleGroup: ThreeElement<typeof BundleGroup>
+  }
+}
+
+extend({ BundleGroup })
 
 const dracoLoader = new DRACOLoader()
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
@@ -28,6 +38,7 @@ export interface GlobeProps {
   ref?: Ref<TilesRendererImpl>
   apiKey?: string
   materialHandler?: () => Material
+  useBundleGroup?: boolean
   useHighQualitySettings?: boolean
   children?: ReactNode
 }
@@ -36,6 +47,7 @@ export const Globe: FC<GlobeProps> = ({
   ref,
   apiKey = import.meta.env.STORYBOOK_GOOGLE_MAP_API_KEY,
   materialHandler,
+  useBundleGroup = true,
   useHighQualitySettings = false,
   children
 }) => {
@@ -56,7 +68,9 @@ export const Globe: FC<GlobeProps> = ({
     }
   }, [tiles, useHighQualitySettings])
 
-  return (
+  const [bundleGroup, setBundleGroup] = useState<BundleGroup | null>(null)
+
+  const content = (
     <TilesRenderer
       ref={mergeRefs([ref, setTiles, connectToDescription])}
       // Reconstruct tiles when API key changes.
@@ -84,7 +98,10 @@ export const Globe: FC<GlobeProps> = ({
       )}
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
-      <TilesPlugin plugin={UpdateOnChangePlugin} />
+      <TilesPlugin
+        plugin={UpdateOnChangeBundlePlugin}
+        bundleGroup={bundleGroup}
+      />
       <TilesPlugin
         plugin={TileCreasedNormalsPlugin}
         args={{ creaseAngle: radians(30) }}
@@ -96,5 +113,11 @@ export const Globe: FC<GlobeProps> = ({
       <TilesPlugin plugin={TilesFadePlugin} />
       {children}
     </TilesRenderer>
+  )
+
+  return useBundleGroup ? (
+    <bundleGroup ref={setBundleGroup}>{content}</bundleGroup>
+  ) : (
+    content
   )
 }

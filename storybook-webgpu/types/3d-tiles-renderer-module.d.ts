@@ -1,3 +1,4 @@
+import type { TilesRenderer } from '3d-tiles-renderer'
 import type { TiledImageSource } from '3d-tiles-renderer/src/three/plugins/images/sources/TiledImageSource.js'
 
 export {}
@@ -16,5 +17,14 @@ declare module '3d-tiles-renderer/plugins' {
 
   interface TiledImageOverlay {
     imageSource: TiledImageSource
+  }
+
+  interface UpdateOnChangePlugin {
+    tiles?: TilesRenderer | null
+    needsUpdate: boolean
+
+    init(tiles: TilesRenderer): void
+    doTilesNeedUpdate(): boolean
+    dispose(): void
   }
 }
