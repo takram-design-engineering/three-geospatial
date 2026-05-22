@@ -1,4 +1,4 @@
-import { ReorientationPlugin as ReorientationPluginBase } from '3d-tiles-renderer/plugins'
+import { ReorientationPlugin as ReorientationPluginBase } from '3d-tiles-renderer/three/plugins'
 
 export class ReorientationPlugin extends ReorientationPluginBase {
   update(): void {

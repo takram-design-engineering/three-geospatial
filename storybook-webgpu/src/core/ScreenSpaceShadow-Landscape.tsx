@@ -1,9 +1,9 @@
 import { useFrame, useThree } from '@react-three/fiber'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   GLTFCesiumRTCExtension,
   GLTFExtensionsPlugin
-} from '3d-tiles-renderer/plugins'
-import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
+} from '3d-tiles-renderer/three/plugins'
 import { Suspense, useLayoutEffect, useMemo, type FC } from 'react'
 import {
   ACESFilmicToneMapping,

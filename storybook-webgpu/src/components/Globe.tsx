@@ -1,12 +1,15 @@
 import { extend, type ThreeElement } from '@react-three/fiber'
 import type { TilesRenderer as TilesRendererImpl } from '3d-tiles-renderer'
-import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
+import {
+  CesiumIonAuthPlugin,
+  GoogleCloudAuthPlugin
+} from '3d-tiles-renderer/core/plugins'
+import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import {
   GLTFExtensionsPlugin,
-  GoogleCloudAuthPlugin,
-  TileCompressionPlugin
-} from '3d-tiles-renderer/plugins'
-import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
+  TileCompressionPlugin,
+  UpdateOnChangePlugin
+} from '3d-tiles-renderer/three/plugins'
 import { useEffect, useState, type FC, type ReactNode, type Ref } from 'react'
 import { mergeRefs } from 'react-merge-refs'
 import type { Material } from 'three'
@@ -98,6 +101,7 @@ export const Globe: FC<GlobeProps> = ({
       )}
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
+      <TilesPlugin plugin={UpdateOnChangePlugin} bundleGroup={bundleGroup} />
       <TilesPlugin
         plugin={UpdateOnChangeBundlePlugin}
         bundleGroup={bundleGroup}

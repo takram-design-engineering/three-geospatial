@@ -1,4 +1,4 @@
-import { TilesFadePlugin as TilesFadePluginBase } from '3d-tiles-renderer/plugins'
+import { TilesFadePlugin as TilesFadePluginBase } from '3d-tiles-renderer/three/plugins'
 
 import { FadeMaterialManager } from './FadeMaterialManager'
 

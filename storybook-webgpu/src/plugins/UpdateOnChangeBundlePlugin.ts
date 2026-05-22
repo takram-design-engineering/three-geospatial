@@ -1,5 +1,5 @@
 import type { TilesRenderer } from '3d-tiles-renderer'
-import { UpdateOnChangePlugin } from '3d-tiles-renderer/plugins'
+import { UpdateOnChangePlugin } from '3d-tiles-renderer/three/plugins'
 import type { BundleGroup } from 'three/webgpu'
 
 export class UpdateOnChangeBundlePlugin extends UpdateOnChangePlugin {

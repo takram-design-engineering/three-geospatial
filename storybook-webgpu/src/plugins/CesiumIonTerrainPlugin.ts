@@ -1,5 +1,5 @@
 import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
-import { QuantizedMeshPlugin } from '3d-tiles-renderer/plugins'
+import { QuantizedMeshPlugin } from '3d-tiles-renderer/three/plugins'
 
 type CesiumIonAuthPluginOptions = ConstructorParameters<
   typeof CesiumIonAuthPlugin

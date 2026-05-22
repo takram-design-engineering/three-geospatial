@@ -1,4 +1,4 @@
-import { XYZTilesOverlay } from '3d-tiles-renderer/plugins'
+import { XYZTilesOverlay } from '3d-tiles-renderer/three/plugins'
 
 import { WaterAreaImageSource } from './WaterAreaImageSource'
 

@@ -1,11 +1,13 @@
 import { TilesRenderer } from '3d-tiles-renderer'
-import { CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins'
+import {
+  CesiumIonAuthPlugin,
+  GoogleCloudAuthPlugin
+} from '3d-tiles-renderer/core/plugins'
 import {
   GLTFExtensionsPlugin,
-  GoogleCloudAuthPlugin,
   TileCompressionPlugin,
   UpdateOnChangePlugin
-} from '3d-tiles-renderer/plugins'
+} from '3d-tiles-renderer/three/plugins'
 import { ColorManagement, PerspectiveCamera, Scene, Vector3 } from 'three'
 import { Inspector } from 'three/addons/inspector/Inspector.js'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'

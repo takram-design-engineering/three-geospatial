@@ -3,7 +3,7 @@ import type { TiledImageSource } from '3d-tiles-renderer/src/three/plugins/image
 
 export {}
 
-declare module '3d-tiles-renderer/plugins' {
+declare module '3d-tiles-renderer/three/plugins' {
   interface ReorientationPlugin {
     lat?: number
     lon?: number
