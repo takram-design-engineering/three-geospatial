@@ -7,9 +7,9 @@ import {
 } from '@react-three/fiber'
 import { TilesPlugin } from '3d-tiles-renderer/r3f'
 import { Suspense, useLayoutEffect, useRef, useState, type FC } from 'react'
-import { Vector3, type Object3D } from 'three'
+import { Vector3 } from 'three'
 import { context, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
-import { RenderPipeline, type Renderer } from 'three/webgpu'
+import { RenderPipeline, type BundleGroup, type Renderer } from 'three/webgpu'
 
 import {
   getECIToECEFRotationMatrix,
@@ -162,11 +162,12 @@ const Content: FC<StoryProps> = () => {
   const motionHeight = useSpringControl(({ height }: StoryArgs) => height)
   const motionKnots = useSpringControl(({ knots }: StoryArgs) => knots)
 
-  const modelRef = useRef<Object3D>(null)
+  const modelRef = useRef<BundleGroup>(null)
   const geodetic = new Geodetic()
   const position = new Vector3()
-  useFrame((state, delta) => {
-    let { longitude, latitude } = stateRef.current
+  useFrame((_, delta) => {
+    const state = stateRef.current
+    let { longitude, latitude } = state
 
     // The radii of curvature of meridian and prime vertical circle:
     // Reference: https://www.gsi.go.jp/common/000258740.pdf
@@ -185,7 +186,8 @@ const Content: FC<StoryProps> = () => {
     const dy = (ddt * Math.cos(theta)) / (M + height)
     longitude += dx
     latitude += dy
-    Object.assign(stateRef.current, { longitude, latitude })
+    state.longitude = longitude
+    state.latitude = latitude
 
     Ellipsoid.WGS84.getNorthUpEastFrame(
       geodetic.set(longitude, latitude, height).toECEF(position),
@@ -197,8 +199,10 @@ const Content: FC<StoryProps> = () => {
       reorientationPlugin.height = height
       reorientationPlugin.update()
     }
-    if (modelRef.current != null) {
-      modelRef.current.rotation.y = -heading
+    const model = modelRef.current
+    if (model != null) {
+      model.rotation.y = -heading
+      model.needsUpdate = true
     }
   })
 

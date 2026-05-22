@@ -1,15 +1,25 @@
-import { useMemo, type ComponentProps, type FC } from 'react'
+import { extend, type ThreeElement } from '@react-three/fiber'
+import { useMemo, useRef, type ComponentProps, type FC } from 'react'
 import { Matrix3, Vector3, type Matrix4 } from 'three'
+import { BundleGroup } from 'three/webgpu'
 
 import { lerp } from '@takram/three-geospatial'
 
 import { useGLTF } from '../hooks/useGLTF'
 import { useGuardedFrame } from '../hooks/useGuardedFrame'
 
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    bundleGroup: ThreeElement<typeof BundleGroup>
+  }
+}
+
+extend({ BundleGroup })
+
 const vector = new Vector3()
 const rotation = new Matrix3()
 
-export interface ISSProps extends ComponentProps<'group'> {
+export interface ISSProps extends ComponentProps<'bundleGroup'> {
   matrixWorldToECEF: Matrix4
   sunDirectionECEF: Vector3
 }
@@ -57,6 +67,8 @@ export const ISS: FC<ISSProps> = ({
     }
   }, [gltf.scene])
 
+  const ref = useRef<BundleGroup>(null)
+
   useGuardedFrame(() => {
     const sunDirectionLocal = vector
       .copy(sunDirectionECEF)
@@ -90,16 +102,17 @@ export const ISS: FC<ISSProps> = ({
     for (const radiator of radiators) {
       radiator.rotation.z = radiatorAngleLerp
     }
+    ref.current!.needsUpdate = true
   })
 
   return (
-    <group {...props}>
+    <bundleGroup {...props} ref={ref}>
       <primitive
         object={gltf.scene}
         rotation-x={Math.PI / 2}
         rotation-y={Math.PI / 2}
         rotation-z={-Math.PI / 2}
       />
-    </group>
+    </bundleGroup>
   )
 }

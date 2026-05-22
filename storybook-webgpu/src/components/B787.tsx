@@ -1,11 +1,20 @@
-import { useFrame } from '@react-three/fiber'
+import { extend, useFrame, type ThreeElement } from '@react-three/fiber'
 import { useMemo, type ComponentProps, type FC } from 'react'
+import { BundleGroup } from 'three/webgpu'
 
 import { euclideanModulo } from '@takram/three-geospatial'
 
 import { useGLTF } from '../hooks/useGLTF'
 
-export interface B787Props extends ComponentProps<'group'> {}
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    bundleGroup: ThreeElement<typeof BundleGroup>
+  }
+}
+
+extend({ BundleGroup })
+
+export interface B787Props extends ComponentProps<'bundleGroup'> {}
 
 export const B787: FC<B787Props> = props => {
   const gltf = useGLTF('public/b787.glb')
@@ -42,12 +51,12 @@ export const B787: FC<B787Props> = props => {
   })
 
   return (
-    <group {...props}>
+    <bundleGroup {...props}>
       <primitive
         object={gltf.scene}
         position={[-4, -9, 0]}
         rotation-y={Math.PI}
       />
-    </group>
+    </bundleGroup>
   )
 }
