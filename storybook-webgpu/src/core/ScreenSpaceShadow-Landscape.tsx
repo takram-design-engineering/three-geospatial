@@ -5,12 +5,25 @@ import {
 } from '3d-tiles-renderer/plugins'
 import { TilesPlugin, TilesRenderer } from '3d-tiles-renderer/r3f'
 import { Suspense, useLayoutEffect, useMemo, type FC } from 'react'
-import { ColorManagement, DirectionalLight, Scene, Vector3 } from 'three'
+import {
+  ACESFilmicToneMapping,
+  ColorManagement,
+  DirectionalLight,
+  NoToneMapping,
+  Scene,
+  Vector3
+} from 'three'
 import { CSMShadowNode } from 'three/addons/csm/CSMShadowNode.js'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js'
-import { builtinShadowContext, mrt, pass, screenUV } from 'three/tsl'
+import {
+  builtinShadowContext,
+  mrt,
+  pass,
+  screenUV,
+  toneMapping
+} from 'three/tsl'
 import {
   MeshLambertNodeMaterial,
   RenderPipeline,
@@ -64,6 +77,8 @@ Ellipsoid.WGS84.getEastNorthUpVectors(position, east, north, up)
 
 const Content: FC<StoryProps> = () => {
   const renderer = useThree<Renderer>(({ gl }) => gl as any)
+  renderer.toneMapping = NoToneMapping
+
   const scene = useThree(({ scene }) => scene)
   const camera = useThree(({ camera }) => camera)
 
@@ -143,15 +158,20 @@ const Content: FC<StoryProps> = () => {
     passNode.needsUpdate = true
   }, [light, passNode, sssNode, enabled])
 
+  const toneMappingNode = useResource(
+    () => toneMapping(ACESFilmicToneMapping, 1, passNode),
+    [passNode]
+  )
+
   const taaNode = useResource(
     () =>
       temporalAntialias(
-        passNode,
+        toneMappingNode,
         prePassNode.getTextureNode('depth'),
         prePassNode.getTextureNode('output'),
         camera
       ),
-    [camera, prePassNode, passNode]
+    [camera, prePassNode, toneMappingNode]
   )
 
   const renderPipeline = useResource(
