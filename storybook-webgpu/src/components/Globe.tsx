@@ -21,7 +21,7 @@ import { radians } from '@takram/three-geospatial'
 import { TilesFadePlugin } from '../plugins/fade/TilesFadePlugin'
 import { TileCreasedNormalsPlugin } from '../plugins/TileCreasedNormalsPlugin'
 import { TileMaterialReplacementPlugin } from '../plugins/TileMaterialReplacementPlugin'
-import { UpdateBundleGroupPlugin } from '../plugins/UpdateBundleGroupPlugin'
+import { UpdateOnChangeBundlePlugin } from '../plugins/UpdateOnChangeBundlePlugin'
 import { connectToDescription } from './Description'
 
 declare module '@react-three/fiber' {
@@ -101,8 +101,11 @@ export const Globe: FC<GlobeProps> = ({
       )}
       <TilesPlugin plugin={GLTFExtensionsPlugin} dracoLoader={dracoLoader} />
       <TilesPlugin plugin={TileCompressionPlugin} />
-      <TilesPlugin plugin={UpdateOnChangePlugin} />
-      <TilesPlugin plugin={UpdateBundleGroupPlugin} bundleGroup={bundleGroup} />
+      <TilesPlugin plugin={UpdateOnChangePlugin} bundleGroup={bundleGroup} />
+      <TilesPlugin
+        plugin={UpdateOnChangeBundlePlugin}
+        bundleGroup={bundleGroup}
+      />
       <TilesPlugin
         plugin={TileCreasedNormalsPlugin}
         args={{ creaseAngle: radians(30) }}
