@@ -10,6 +10,7 @@ import {
   Fn,
   positionView,
   reference,
+  renderGroup,
   uniform
 } from 'three/tsl'
 import type { UniformNode } from 'three/webgpu'
@@ -38,16 +39,18 @@ function getCache<T extends {}, U extends {}>(
 export const projectionMatrix = (camera?: Camera | null): Node<'mat4'> =>
   camera != null
     ? getCache(camera, 'projectionMatrix', () =>
-        reference('projectionMatrix', 'mat4', camera).setName(
-          'projectionMatrix'
-        )
+        reference('projectionMatrix', 'mat4', camera)
+          .setGroup(renderGroup)
+          .setName('projectionMatrix')
       )
     : cameraProjectionMatrix
 
 export const viewMatrix = (camera?: Camera | null): Node<'mat4'> =>
   camera != null
     ? getCache(camera, 'viewMatrix', () =>
-        reference('matrixWorldInverse', 'mat4', camera).setName('viewMatrix')
+        reference('matrixWorldInverse', 'mat4', camera)
+          .setGroup(renderGroup)
+          .setName('viewMatrix')
       )
     : cameraViewMatrix
 
@@ -56,16 +59,18 @@ export const inverseProjectionMatrix = (
 ): Node<'mat4'> =>
   camera != null
     ? getCache(camera, 'inverseProjectionMatrix', () =>
-        reference('projectionMatrixInverse', 'mat4', camera).setName(
-          'inverseProjectionMatrix'
-        )
+        reference('projectionMatrixInverse', 'mat4', camera)
+          .setGroup(renderGroup)
+          .setName('inverseProjectionMatrix')
       )
     : cameraProjectionMatrixInverse
 
 export const inverseViewMatrix = (camera?: Camera | null): Node<'mat4'> =>
   camera != null
     ? getCache(camera, 'inverseViewMatrix', () =>
-        reference('matrixWorld', 'mat4', camera).setName('inverseViewMatrix')
+        reference('matrixWorld', 'mat4', camera)
+          .setGroup(renderGroup)
+          .setName('inverseViewMatrix')
       )
     : cameraWorldMatrix // TODO: Not always
 
@@ -75,6 +80,7 @@ export const cameraPositionWorld = (
   camera != null
     ? getCache(camera, 'cameraPositionWorld', () =>
         uniform('vec3')
+          .setGroup(renderGroup)
           .setName('cameraPositionWorld')
           .onRenderUpdate((_, { value }) => {
             value.setFromMatrixPosition(camera.matrixWorld)
@@ -85,14 +91,18 @@ export const cameraPositionWorld = (
 export const cameraNear = (camera?: Camera | null): Node<'float'> =>
   camera != null
     ? getCache(camera, 'cameraNear', () =>
-        reference('near', 'float', camera).setName('cameraNear')
+        reference('near', 'float', camera)
+          .setGroup(renderGroup)
+          .setName('cameraNear')
       )
     : cameraNearTSL
 
 export const cameraFar = (camera?: Camera | null): Node<'float'> =>
   camera != null
     ? getCache(camera, 'cameraFar', () =>
-        reference('far', 'float', camera).setName('cameraFar')
+        reference('far', 'float', camera)
+          .setGroup(renderGroup)
+          .setName('cameraFar')
       )
     : cameraFarTSL
 

@@ -9,6 +9,7 @@ import type {
   Renderer,
   StorageTextureNode,
   TextureNode,
+  UniformGroupNode,
   UniformNode
 } from 'three/webgpu'
 import type { LiteralToPrimitive, Primitive } from 'type-fest'
@@ -150,5 +151,11 @@ declare module 'three/src/nodes/accessors/TextureNode.js' {
     size(levelNode?: Node | number): TextureNode
     bias(biasNode: Node): TextureNode
     offset(biasNode: Node): TextureNode
+  }
+}
+
+declare module 'three/src/nodes/accessors/ReferenceNode.js' {
+  export default interface ReferenceNode {
+    setGroup(group: UniformGroupNode): this
   }
 }

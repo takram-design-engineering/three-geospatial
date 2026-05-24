@@ -1,5 +1,5 @@
 import { Vector2, Vector3, type Camera } from 'three'
-import { uniform } from 'three/tsl'
+import { renderGroup, uniform } from 'three/tsl'
 import { NodeBuilder, type Renderer } from 'three/webgpu'
 
 import { Ellipsoid, Geodetic } from '@takram/three-geospatial'
@@ -15,14 +15,32 @@ const geodeticScratch = /*#__PURE__*/ new Geodetic()
 export class AtmosphereContext extends AtmosphereContextBase {
   lutNode: AtmosphereLUTNode
 
-  matrixWorldToECEF = uniform('mat4').setName('matrixWorldToECEF')
-  matrixECIToECEF = uniform('mat4').setName('matrixECIToECEF')
-  sunDirectionECEF = uniform('vec3').setName('sunDirectionECEF')
-  moonDirectionECEF = uniform('vec3').setName('moonDirectionECEF')
-  matrixMoonFixedToECEF = uniform('mat4').setName('matrixMoonFixedToECEF')
+  matrixWorldToECEF = uniform('mat4')
+    .setGroup(renderGroup)
+    .setName('matrixWorldToECEF')
+
+  matrixECIToECEF = uniform('mat4')
+    .setGroup(renderGroup)
+    .setName('matrixECIToECEF')
+
+  sunDirectionECEF = uniform('vec3')
+    .setGroup(renderGroup)
+    .setName('sunDirectionECEF')
+
+  moonDirectionECEF = uniform('vec3')
+    .setGroup(renderGroup)
+    .setName('moonDirectionECEF')
+
+  matrixMoonFixedToECEF = uniform('mat4')
+    .setGroup(renderGroup)
+    .setName('matrixMoonFixedToECEF')
+
   scatteringSampleCount = uniform(new Vector2(4, 14))
+    .setGroup(renderGroup)
+    .setName('scatteringSampleCount')
 
   matrixViewToECEF = uniform('mat4')
+    .setGroup(renderGroup)
     .setName('matrixViewToECEF')
     .onRenderUpdate((frame, { value }) => {
       const camera = this.camera ?? frame.camera
@@ -33,12 +51,14 @@ export class AtmosphereContext extends AtmosphereContextBase {
     })
 
   matrixECEFToWorld = uniform('mat4')
+    .setGroup(renderGroup)
     .setName('matrixECEFToWorld')
     .onRenderUpdate((_, { value }) => {
       value.copy(this.matrixWorldToECEF.value).invert()
     })
 
   matrixECEFToView = uniform('mat4')
+    .setGroup(renderGroup)
     .setName('matrixECEFToView')
     .onRenderUpdate((frame, { value }) => {
       const camera = this.camera ?? frame.camera
@@ -52,6 +72,7 @@ export class AtmosphereContext extends AtmosphereContextBase {
     })
 
   cameraPositionECEF = uniform('vec3')
+    .setGroup(renderGroup)
     .setName('cameraPositionECEF')
     .onRenderUpdate((frame, { value }) => {
       const camera = this.camera ?? frame.camera
@@ -64,6 +85,7 @@ export class AtmosphereContext extends AtmosphereContextBase {
     })
 
   altitudeCorrectionECEF = uniform('vec3')
+    .setGroup(renderGroup)
     .setName('altitudeCorrectionECEF')
     .onRenderUpdate((frame, { value }) => {
       const camera = this.camera ?? frame.camera
@@ -81,6 +103,7 @@ export class AtmosphereContext extends AtmosphereContextBase {
     })
 
   cameraHeight = uniform(0)
+    .setGroup(renderGroup)
     .setName('cameraHeight')
     .onRenderUpdate((frame, self) => {
       const camera = this.camera ?? frame.camera
