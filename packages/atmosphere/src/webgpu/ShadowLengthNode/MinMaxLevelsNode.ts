@@ -84,10 +84,9 @@ export class MinMaxLevelsNode extends Node {
   constructor() {
     super()
     this.updateType = NodeUpdateType.FRAME // After CSM's updateBefore
-    this.gatherMaterial.name = 'MinMaxLevels_gather'
-    this.mipmapMaterial.name = 'MinMaxLevels_mipmap'
-    this.mesh.name = 'MinMaxLevels'
-
+    this.gatherMaterial.name = 'MinMaxLevels [Gather]'
+    this.mipmapMaterial.name = 'MinMaxLevels [Mipmap]'
+    this.mesh.name = 'MinMaxLevels]'
     const renderTarget = new RenderTarget(1, 1, {
       depthBuffer: false,
       // TODO: In reversed depth buffer, where FloatType is used for the depth
@@ -101,9 +100,9 @@ export class MinMaxLevelsNode extends Node {
     })
 
     this.renderTargetA = renderTarget
-    this.renderTargetA.texture.name = 'MinMaxLevelsA'
+    this.renderTargetA.texture.name = 'MinMaxLevels [A]'
     this.renderTargetB = renderTarget.clone()
-    this.renderTargetB.texture.name = 'MinMaxLevelsB'
+    this.renderTargetB.texture.name = 'MinMaxLevels [B]'
 
     this.textureNode = outputTexture(this, this.renderTargetA.texture)
   }

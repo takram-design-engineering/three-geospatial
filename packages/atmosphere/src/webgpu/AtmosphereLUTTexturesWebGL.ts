@@ -62,7 +62,7 @@ function createRenderTarget(name: string): RenderTarget {
   })
   const texture = renderTarget.texture
   texture.colorSpace = NoColorSpace
-  texture.name = `AtmosphereLUT_${name}`
+  texture.name = `AtmosphereLUT [${name}]`
   return renderTarget
 }
 
@@ -73,7 +73,7 @@ function createRenderTarget3D(name: string): RenderTarget3D {
   })
   const texture = renderTarget.texture as unknown as Data3DTexture
   texture.colorSpace = NoColorSpace
-  texture.name = `AtmosphereLUT_${name}`
+  texture.name = `AtmosphereLUT [${name}]`
   return renderTarget
 }
 
@@ -122,12 +122,12 @@ export class AtmosphereLUTTexturesWebGL extends AtmosphereLUTTextures {
     super()
     this.mesh.name = 'AtmosphereLUTTexturesWebGL'
 
-    this.transmittanceRT = createRenderTarget('transmittance')
-    this.multipleScatteringRT = createRenderTarget('multipleScattering')
-    this.scatteringRT = createRenderTarget3D('scattering')
-    this.singleMieScatteringRT = createRenderTarget3D('singleMieScattering')
-    this.higherOrderScatteringRT = createRenderTarget3D('higherOrderScattering')
-    this.irradianceRT = createRenderTarget('irradiance')
+    this.transmittanceRT = createRenderTarget('Transmittance')
+    this.multipleScatteringRT = createRenderTarget('MultipleScattering')
+    this.scatteringRT = createRenderTarget3D('Scattering')
+    this.singleMieScatteringRT = createRenderTarget3D('SingleMieScattering')
+    this.higherOrderScatteringRT = createRenderTarget3D('HigherOrderScattering')
+    this.irradianceRT = createRenderTarget('Irradiance')
   }
 
   get(name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName): Texture {

@@ -57,7 +57,7 @@ export class LensFlareNode extends TempNode {
     this.glareNode = new LensGlareNode()
 
     this.featuresNode = renderTarget(add(this.ghostNode, this.haloNode), {
-      name: 'LensFlare_features',
+      name: 'LensFlare [Features]',
       resolutionScale: 0.5
     })
 
@@ -161,4 +161,4 @@ export class LensFlareNode extends TempNode {
 }
 
 export const lensFlare = (inputNode?: Node | null): LensFlareNode =>
-  new LensFlareNode(convertToTexture(inputNode, { name: 'LensFlare_input' }))
+  new LensFlareNode(convertToTexture(inputNode, { name: 'LensFlare [Input]' }))

@@ -47,7 +47,7 @@ export abstract class FilterNode extends TempNode {
     const texture = renderTarget.texture
 
     const typeName = (this.constructor as typeof Node).type.replace(/Node$/, '')
-    texture.name = name != null ? `${typeName}_${name}` : typeName
+    texture.name = name != null ? `${typeName} [${name}]` : typeName
 
     this.renderTargets.push(renderTarget)
     return renderTarget

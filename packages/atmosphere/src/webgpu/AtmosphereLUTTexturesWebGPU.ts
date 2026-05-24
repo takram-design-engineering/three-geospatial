@@ -62,7 +62,7 @@ export function createStorageTexture(name: string): StorageTexture {
   const texture = new StorageTexture(1, 1)
   texture.colorSpace = NoColorSpace
   texture.generateMipmaps = false
-  texture.name = `AtmosphereLUT_${name}`
+  texture.name = `AtmosphereLUT [${name}]`
   return texture
 }
 
@@ -70,7 +70,7 @@ export function createStorage3DTexture(name: string): Storage3DTexture {
   const texture = new Storage3DTexture(1, 1, 1)
   texture.colorSpace = NoColorSpace
   texture.generateMipmaps = false
-  texture.name = `AtmosphereLUT_${name}`
+  texture.name = `AtmosphereLUT [${name}]`
   return texture
 }
 
@@ -114,12 +114,12 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
 
   constructor() {
     super()
-    this.transmittance = createStorageTexture('transmittance')
-    this.multipleScattering = createStorageTexture('multipleScattering')
-    this.scattering = createStorage3DTexture('scattering')
-    this.singleMieScattering = createStorage3DTexture('singleMieScattering')
-    this.higherOrderScattering = createStorage3DTexture('higherOrderScattering')
-    this.irradiance = createStorageTexture('irradiance')
+    this.transmittance = createStorageTexture('Transmittance')
+    this.multipleScattering = createStorageTexture('MultipleScattering')
+    this.scattering = createStorage3DTexture('Scattering')
+    this.singleMieScattering = createStorage3DTexture('SingleMieScattering')
+    this.higherOrderScattering = createStorage3DTexture('HigherOrderScattering')
+    this.irradiance = createStorageTexture('Irradiance')
   }
 
   get(name: AtmosphereLUTTextureName | AtmosphereLUTTexture3DName): Texture {
@@ -156,7 +156,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     })()
       .context({ getAtmosphere: () => context })
       .computeKernel([8, 8, 1])
-      .setName('AtmosphereLUT_transmittance')
+      .setName('AtmosphereLUT [Transmittance]')
 
     void renderer.compute(this.transmittanceNode, [
       Math.ceil(width / 8),
@@ -283,7 +283,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     })()
       .context({ getAtmosphere: () => context })
       .computeKernel([1, 1, sampleCount])
-      .setName('AtmosphereLUT_multipleScattering')
+      .setName('AtmosphereLUT [MultipleScattering]')
 
     void renderer.compute(this.multipleScatteringNode, [width, height, 1])
   }
@@ -336,7 +336,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     })()
       .context({ getAtmosphere: () => context })
       .computeKernel([4, 4, 4])
-      .setName('AtmosphereLUT_scattering')
+      .setName('AtmosphereLUT [Scattering]')
 
     void renderer.compute(this.scatteringNode, [
       Math.ceil(width / 4),
@@ -368,7 +368,7 @@ export class AtmosphereLUTTexturesWebGPU extends AtmosphereLUTTextures {
     })()
       .context({ getAtmosphere: () => context })
       .computeKernel([8, 8, 1])
-      .setName('AtmosphereLUT_irradiance')
+      .setName('AtmosphereLUT [Irradiance]')
 
     void renderer.compute(this.irradianceNode, [
       Math.ceil(width / 8),

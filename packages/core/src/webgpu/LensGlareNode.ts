@@ -89,7 +89,7 @@ function createQuadTexture(): CanvasTexture {
   texture.colorSpace = SRGBColorSpace
   texture.generateMipmaps = false
   texture.needsUpdate = true
-  texture.name = 'LensGlare_quad'
+  texture.name = 'LensGlare [Quad]'
   return texture
 }
 
@@ -344,4 +344,4 @@ export class LensGlareNode extends FilterNode {
 }
 
 export const lensGlare = (inputNode: Node | null): LensGlareNode =>
-  new LensGlareNode(convertToTexture(inputNode, { name: 'LensGlare_input' }))
+  new LensGlareNode(convertToTexture(inputNode, { name: 'LensGlare [Input]' }))
