@@ -2,7 +2,7 @@
 
 A monorepo of libraries for enhancing geospatial rendering in Three.js.
 
-This project takes a modular approach, allowing users to selectively use only the parts they need rather than aiming to provide a comprehensive solution. It is designed to work alongside existing, excellent libraries such as `3d-tiles-renderer`, `astronomy-engine`, and of course Three.js and R3F (React Three Fiber).
+This project takes a modular approach, allowing users to selectively use only the parts they need rather than aiming to provide a comprehensive solution. It is designed to work alongside existing, excellent libraries such as [`3d-tiles-renderer`](https://github.com/NASA-AMMOS/3DTilesRendererJS), [`astronomy-engine`](https://github.com/cosinekitty/astronomy), and of course Three.js and R3F (React Three Fiber).
 
 This project originally started as a prototype focused on the rendering aspect of a Web GIS engine developed by Eukarya. It was part of Takram's client work, commissioned by Eukarya under the SBIR (Small/Startup Business Innovation Research) program led by the Cabinet Office of Japan. Our contribution to the project concluded in March 2025.
 
