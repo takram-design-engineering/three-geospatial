@@ -226,14 +226,14 @@ const Content: FC<StoryProps> = ({
       outputNode = bool(true).select(
         shadowLengthNode.getDebugInternalTexturesNode(),
         outputNode
-      )
+      ) // uniformFlow intentionally omitted
     } else if (displayShadowLength) {
       outputNode = bool(true).select(
         shadowLengthNode.xxx
           .mul(1 / atmosphereContext.parameters.worldToUnit)
           .mul(0.0001), // 1 = 10 km
         outputNode
-      )
+      ) // uniformFlow intentionally omitted
     }
     return new RenderPipeline(renderer, outputNode)
   }, [

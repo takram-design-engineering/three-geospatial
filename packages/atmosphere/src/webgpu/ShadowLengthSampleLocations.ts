@@ -34,11 +34,10 @@ export class ShadowLengthSampleLocations extends Points {
       .toUint()
       .toVertexStage()
 
-    material.vertexNode = isValid.select(
-      vec4(coordinate.xy, 0, 1),
-      vec4(2, 2, 0, 1)
-    )
-    material.colorNode = isValid.select(vec3(1, 0, 0), vec3())
+    material.vertexNode = isValid
+      .select(vec4(coordinate.xy, 0, 1), vec4(2, 2, 0, 1))
+      .uniformFlow()
+    material.colorNode = isValid.select(vec3(1, 0, 0), vec3()).uniformFlow()
 
     super(geometry, material)
 

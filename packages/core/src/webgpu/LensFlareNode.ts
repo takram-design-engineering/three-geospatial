@@ -132,7 +132,8 @@ export class LensFlareNode extends TempNode {
               luminance(threshold.sample(uv.xy).rgb).saturate()
             ),
             bloom.sample(uv.zy).rgb
-          ),
+          )
+          .uniformFlow(),
         uvNode.x
           .lessThan(0.5)
           .select(
@@ -145,7 +146,9 @@ export class LensFlareNode extends TempNode {
                   .rgb.mul(uv.zw.lessThan(quadSize).all())
               )
           )
-      ).rgb
+          .uniformFlow()
+      )
+      .uniformFlow().rgb
   }
 
   override dispose(): void {

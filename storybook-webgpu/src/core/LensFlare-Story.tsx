@@ -53,7 +53,7 @@ const Content: FC<StoryProps> = () => {
       outputNode = bool(true).select(
         lensFlareNode.getDebugInternalTexturesNode(),
         outputNode
-      )
+      ) // uniformFlow intentionally omitted
     }
 
     return new RenderPipeline(renderer, outputNode)

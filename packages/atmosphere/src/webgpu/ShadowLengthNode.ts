@@ -351,16 +351,20 @@ export class ShadowLengthNode extends TempNode {
               .select(
                 sliceEndpoints.sample(uv2.xy),
                 sliceUVDirection.sample(uv2.xz)
-              ),
+              )
+              .uniformFlow(),
             coordinate.sample(uv1.zy)
-          ),
+          )
+          .uniformFlow(),
         uvNode.x
           .lessThan(0.5)
           .select(
             minMaxLevels.sample(uv1.xw),
             vec3(epipolarShadowLength.sample(uv1.zw).xy, 0)
           )
-      ).rgb
+          .uniformFlow()
+      )
+      .uniformFlow().rgb
   }
 
   override dispose(): void {

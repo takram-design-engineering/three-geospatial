@@ -34,6 +34,7 @@ export function useFilterTextureNode(): TextureNode {
         vec2(screenAspect.div(imageAspect), 1),
         vec2(1, imageAspect.div(screenAspect))
       )
+      .uniformFlow()
 
     const offset = uniform('vec2')
     const offsetAmount = 0.05

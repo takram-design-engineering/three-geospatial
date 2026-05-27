@@ -382,8 +382,8 @@ export class ScreenSpaceShadowNode extends TempNode {
         .toConst()
 
       const axis = ivec2(
-        horizontal.select(signXY.y, 0),
-        horizontal.select(0, signXY.x.negate())
+        horizontal.select(signXY.y, 0).uniformFlow(),
+        horizontal.select(0, signXY.x.negate()).uniformFlow()
       )
 
       // Apply workgroup offset along the axis
@@ -392,16 +392,20 @@ export class ScreenSpaceShadowNode extends TempNode {
       // For interpolation to the light center, we only really care about the
       // larger of the two axis.
       const xAxisMajor = abs(xyF.x).greaterThan(abs(xyF.y)).toConst()
-      const majorAxis = xAxisMajor.select(xyF.x, xyF.y).toConst()
+      const majorAxis = xAxisMajor.select(xyF.x, xyF.y).uniformFlow().toConst()
 
       const majorAxisStart = majorAxis.abs().toConst()
       const majorAxisEnd = majorAxisStart.sub(GROUP_SIZE)
 
       const maLightFrac = xAxisMajor
         .select(lightXYFraction.x, lightXYFraction.y)
+        .uniformFlow()
         .toVar()
       maLightFrac.assign(
-        majorAxis.greaterThan(0).select(maLightFrac.negate(), maLightFrac)
+        majorAxis
+          .greaterThan(0)
+          .select(maLightFrac.negate(), maLightFrac)
+          .uniformFlow()
       )
 
       // Back in to screen direction.
@@ -420,10 +424,12 @@ export class ScreenSpaceShadowNode extends TempNode {
 
       // Inverse the read order when reverse direction is true.
       const threadStep = float(
-        reverseDirection.select(
-          invocationLocalIndex,
-          invocationLocalIndex.bitXor(GROUP_SIZE - 1)
-        )
+        reverseDirection
+          .select(
+            invocationLocalIndex,
+            invocationLocalIndex.bitXor(GROUP_SIZE - 1)
+          )
+          .uniformFlow()
       ).toConst()
 
       const pixelXY = mix(startXY, endXY, threadStep.div(GROUP_SIZE)).toVar()
@@ -456,14 +462,20 @@ export class ScreenSpaceShadowNode extends TempNode {
         return and(
           coord.greaterThanEqual(0).all(),
           coord.lessThan(depthNode.size()).all()
-        ).select(depth, farDepth)
+        )
+          .select(depth, farDepth)
+          .uniformFlow()
       }
 
       const { pixelXY, xyDelta, pixelDistance, xAxisMajor } =
         getWorkgroupExtents()
 
       const direction = lightCoordinate.w.negate()
-      const zSign = nearDepth.greaterThan(farDepth).select(-1, 1).toConst()
+      const zSign = nearDepth
+        .greaterThan(farDepth)
+        .select(-1, 1)
+        .uniformFlow()
+        .toConst()
 
       // Must save pixelXY here before modifying it.
       const writeXY = ivec2(pixelXY.floor()).toConst()
@@ -477,17 +489,18 @@ export class ScreenSpaceShadowNode extends TempNode {
         // edge detect filter. Interpolation should only occur on the minor axis
         // of the ray - major axis coordinates should be at pixel centers.
         const readXY = ivec2(pixelXY.floor()).toConst()
-        const minorAxis = xAxisMajor.select(pixelXY.y, pixelXY.x)
+        const minorAxis = xAxisMajor.select(pixelXY.y, pixelXY.x).uniformFlow()
 
         const bias = minorAxis
           .fract()
           .sub(0.5)
           .greaterThan(0)
           .select(1, -1)
+          .uniformFlow()
           .toConst()
         const bilinearOffset = ivec2(
-          xAxisMajor.select(0, bias),
-          xAxisMajor.select(bias, 0)
+          xAxisMajor.select(0, bias).uniformFlow(),
+          xAxisMajor.select(bias, 0).uniformFlow()
         )
 
         const depthCenter = loadDepth(readXY).toConst()
@@ -513,7 +526,9 @@ export class ScreenSpaceShadowNode extends TempNode {
         )
 
         // Shadows cast from this depth.
-        const shadowingDepth = usePointFilter.select(depthCenter, shadowDepth)
+        const shadowingDepth = usePointFilter
+          .select(depthCenter, shadowDepth)
+          .uniformFlow()
 
         const sampleDistance =
           i === 0
@@ -537,6 +552,7 @@ export class ScreenSpaceShadowNode extends TempNode {
           storedDepth = sampleDistance
             .greaterThan(0)
             .select(storedDepth, 1e10)
+            .uniformFlow()
             .toConst()
         }
 

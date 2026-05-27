@@ -356,7 +356,10 @@ export const computeScatteringTexture = /*#__PURE__*/ FnVar(
         // Make t0 and t1 world space distances.
         t0.mulAssign(maxDistanceFloor)
         t1.assign(
-          t1.greaterThan(1).select(maxDistance, maxDistanceFloor.mul(t1))
+          t1
+            .greaterThan(1)
+            .select(maxDistance, maxDistanceFloor.mul(t1))
+            .uniformFlow()
         )
 
         const stepSize = t1.sub(t0)
@@ -493,7 +496,12 @@ export const computeIndirectRadianceToPoint = /*#__PURE__*/ FnVar(
       t1.mulAssign(t1)
       // Make t0 and t1 world space distances.
       t0.mulAssign(maxDistanceFloor)
-      t1.assign(t1.greaterThan(1).select(maxDistance, maxDistanceFloor.mul(t1)))
+      t1.assign(
+        t1
+          .greaterThan(1)
+          .select(maxDistance, maxDistanceFloor.mul(t1))
+          .uniformFlow()
+      )
 
       const stepSize = t1.sub(t0)
       const rayLength = t0.add(stepSize.mul(stbn)) // Add a bias to the sample point

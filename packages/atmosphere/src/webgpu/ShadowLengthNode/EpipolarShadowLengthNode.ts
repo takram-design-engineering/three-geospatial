@@ -589,6 +589,7 @@ export class EpipolarShadowLengthNode extends Node {
           distanceToFirstShadow
             .lessThan(worldToUnit)
             .select(0, distanceToFirstShadow)
+            .uniformFlow()
         )
       }).Else(() => {
         totalShadowLength.y.assign(fullRayLength)

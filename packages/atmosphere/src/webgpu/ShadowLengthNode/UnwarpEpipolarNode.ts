@@ -395,6 +395,7 @@ export class UnwarpEpipolarNode extends Node {
       return totalWeight
         .greaterThan(1e-6)
         .select(shadowLength.div(totalWeight), 0)
+        .uniformFlow()
     })()
   }
 

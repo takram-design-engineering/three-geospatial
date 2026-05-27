@@ -120,6 +120,9 @@ export const getCameraZUnit = /*#__PURE__*/ FnVar(
       // The viewZ can be rendered using MRT, in which case the value of 0 is
       // stored at the sky pixels. We replace it with the camera far.
       const farValue = cameraFar(camera).mul(worldToUnit)
-      return viewZUnit.lessThan(0).select(viewZUnit.negate(), farValue)
+      return viewZUnit
+        .lessThan(0)
+        .select(viewZUnit.negate(), farValue)
+        .uniformFlow()
     }
 )

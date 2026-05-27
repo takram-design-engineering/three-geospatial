@@ -195,6 +195,7 @@ export class LongExposureNode extends TempNode {
       .sub(this.timerNode.x)
       .lessThan(this.shutterSpeed)
       .select(max(this.inputNode, this.historyNode), this.inputNode)
+      .uniformFlow()
     material.needsUpdate = true
 
     copyMaterial.fragmentNode = this.inputNode

@@ -211,16 +211,17 @@ const getIndirectRadiance = /*#__PURE__*/ FnVar(
         rayIntersectsGround(parametersNode, radius, cosView)
       )
 
-      transmittance.assign(
-        intersectsGround.select(
-          0,
+      If(intersectsGround, () => {
+        transmittance.assign(0)
+      }).Else(() => {
+        transmittance.assign(
           getTransmittanceToTopAtmosphereBoundary(
             transmittanceNode,
             radius,
             cosView
           )
         )
-      )
+      })
 
       if (!context.showGround) {
         intersectsGround.assign(bool(false))
@@ -508,7 +509,7 @@ const getIndirectRadianceToPointLookup = /*#__PURE__*/ FnVar(
             intersectsGround
           ),
           transmittance
-        )
+        ) // uniformFlow intentionally omitted
       )
 
       const S = combinedScattering.get('scattering')

@@ -107,6 +107,7 @@ const clipAABB = /*#__PURE__*/ FnLayout({
   return maxUnit
     .greaterThan(1)
     .select(vec4(pClip, current.a).add(vClip.div(maxUnit)), history)
+    .uniformFlow()
 })
 
 const varianceOffsets = [

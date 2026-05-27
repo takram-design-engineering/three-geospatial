@@ -38,7 +38,7 @@ const layerMapFlipY = uniform('bool').onObjectUpdate((frame, self) => {
 const layerUV = attribute('layer_uv_0', 'vec3').toVarying('layerUV0')
 
 export const waterAreaMask = Fn(() => {
-  const uv = layerMapFlipY.select(layerUV.xy.flipY(), layerUV.xy)
+  const uv = layerMapFlipY.select(layerUV.xy.flipY(), layerUV.xy).uniformFlow()
   return layerMap.sample(uv).r
 })().toVar('waterAreaMask')
 

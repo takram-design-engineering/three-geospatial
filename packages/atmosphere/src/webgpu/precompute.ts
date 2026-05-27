@@ -128,7 +128,11 @@ const computeOpticalDepthToTopAtmosphereBoundary = /*#__PURE__*/ FnLayout({
     const y = getProfileDensity(profile, r.sub(bottomRadius))
 
     // Sample weight from the trapezoidal rule.
-    const weight = vec2(i).equal(vec2(0, sampleCount)).any().select(0.5, 1)
+    const weight = vec2(i)
+      .equal(vec2(0, sampleCount))
+      .any()
+      .select(0.5, 1)
+      .uniformFlow()
     opticalDepth.addAssign(y.mul(weight).mul(stepSize))
   })
 
@@ -218,13 +222,16 @@ const getParamsFromTransmittanceTextureUV = /*#__PURE__*/ FnLayout({
   const distance = minDistance
     .add(cosViewUnit.mul(maxDistance.sub(minDistance)))
     .toConst()
-  const cosView = distance.equal(0).select(
-    1,
-    H.pow2()
-      .sub(distanceToHorizon.pow2())
-      .sub(distance.pow2())
-      .div(mul(2, radius, distance))
-  )
+  const cosView = distance
+    .equal(0)
+    .select(
+      1,
+      H.pow2()
+        .sub(distanceToHorizon.pow2())
+        .sub(distance.pow2())
+        .div(mul(2, radius, distance))
+    )
+    .uniformFlow()
   return vec2(radius, cosView)
 })
 

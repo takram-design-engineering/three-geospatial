@@ -181,7 +181,7 @@ export const distanceToNearestAtmosphereBoundary = /*#__PURE__*/ FnLayout({
   return intersectsGround.select(
     distanceToBottomAtmosphereBoundary(parameters, radius, cosView),
     distanceToTopAtmosphereBoundary(parameters, radius, cosView)
-  )
+  ) // uniformFlow intentionally omitted
 })
 
 export const rayIntersectsGround = /*#__PURE__*/ FnLayout({
@@ -451,7 +451,8 @@ export const getScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       getTextureCoordFromUnitRange(
         maxDistance
           .equal(minDistance)
-          .select(0, distance.remap(minDistance, maxDistance)),
+          .select(0, distance.remap(minDistance, maxDistance))
+          .uniformFlow(),
         scatteringTextureCosViewSize.div(2)
       )
         .oneMinus()
@@ -611,6 +612,7 @@ export const getProfileDensity = /*#__PURE__*/ FnLayout({
       getLayerDensity(profile.get('layer0'), altitude),
       getLayerDensity(profile.get('layer1'), altitude)
     )
+    .uniformFlow()
 })
 
 export const getUnitRangeFromTextureCoord = /*#__PURE__*/ FnLayout({
@@ -686,16 +688,19 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       )
       .toConst()
     cosView.assign(
-      distance.equal(0).select(
-        -1,
-        clampCosine(
-          distanceToHorizon
-            .pow2()
-            .add(distance.pow2())
-            .negate()
-            .div(mul(2, radius, distance))
+      distance
+        .equal(0)
+        .select(
+          -1,
+          clampCosine(
+            distanceToHorizon
+              .pow2()
+              .add(distance.pow2())
+              .negate()
+              .div(mul(2, radius, distance))
+          )
         )
-      )
+        .uniformFlow()
     )
     intersectsGround.assign(bool(true))
   }).Else(() => {
@@ -718,15 +723,18 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
       )
       .toConst()
     cosView.assign(
-      distance.equal(0).select(
-        1,
-        clampCosine(
-          H.pow2()
-            .sub(distanceToHorizon.pow2())
-            .sub(distance.pow2())
-            .div(mul(2, radius, distance))
+      distance
+        .equal(0)
+        .select(
+          1,
+          clampCosine(
+            H.pow2()
+              .sub(distanceToHorizon.pow2())
+              .sub(distance.pow2())
+              .div(mul(2, radius, distance))
+          )
         )
-      )
+        .uniformFlow()
     )
     intersectsGround.assign(bool(false))
   })
@@ -747,14 +755,17 @@ const getParamsFromScatteringTextureCoord = /*#__PURE__*/ FnLayout({
   const distance = minDistance
     .add(min(a, A).mul(maxDistance.sub(minDistance)))
     .toConst()
-  const cosLight = distance.equal(0).select(
-    1,
-    clampCosine(
-      H.pow2()
-        .sub(distance.pow2())
-        .div(mul(2, bottomRadius, distance))
+  const cosLight = distance
+    .equal(0)
+    .select(
+      1,
+      clampCosine(
+        H.pow2()
+          .sub(distance.pow2())
+          .div(mul(2, bottomRadius, distance))
+      )
     )
-  )
+    .uniformFlow()
   const cosViewLight = clampCosine(coord.x.mul(2).sub(1))
 
   return scatteringParamsStruct(

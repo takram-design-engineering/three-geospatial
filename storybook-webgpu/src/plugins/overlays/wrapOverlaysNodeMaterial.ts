@@ -90,7 +90,11 @@ function getColorNode(layerCount: number): Node {
 
     for (let i = 0; i < layerCount; ++i) {
       const tint = layerMap[i]
-        .sample(layerMapFlipY[i].select(layerUV[i].xy.flipY(), layerUV[i].xy))
+        .sample(
+          layerMapFlipY[i]
+            .select(layerUV[i].xy.flipY(), layerUV[i].xy)
+            .uniformFlow()
+        )
         .toVar()
 
       // Discard texture outside 0, 1 on w - offset the stepped value by an

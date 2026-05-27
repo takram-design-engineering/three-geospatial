@@ -178,11 +178,14 @@ export class AerialPerspectiveNode extends TempNode {
           radiiUnit
         ).x.toConst() // Near side
 
-        const positionCorrected = intersection.greaterThanEqual(0).select(
-          rayDirectionECEF.mul(intersection).add(cameraPositionUnit),
-          // Fallback to radial projection:
-          normalCorrected.mul(radiiUnit)
-        )
+        const positionCorrected = intersection
+          .greaterThanEqual(0)
+          .select(
+            rayDirectionECEF.mul(intersection).add(cameraPositionUnit),
+            // Fallback to radial projection:
+            normalCorrected.mul(radiiUnit)
+          )
+          .uniformFlow()
         positionUnit.assign(
           mix(positionUnit, positionCorrected, geometryCorrectionAmount)
         )
