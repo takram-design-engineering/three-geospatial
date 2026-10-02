@@ -19,6 +19,18 @@ import {
   ScatteringSpectrum
 } from './dimensional'
 
+// three r184 exposes the StructTypeNode on struct().layout. From r185, struct()
+// returns a proxy that forwards property reads to the StructTypeNode instead,
+// so .layout is gone and .name is read directly.
+function structName(struct: object): string {
+  const node: { name?: string | null } =
+    'layout' in struct && struct.layout != null ? struct.layout : struct
+  if (node.name == null) {
+    throw new Error('Struct name is required.')
+  }
+  return node.name
+}
+
 export const densityProfileLayerStruct = /*#__PURE__*/ struct(
   {
     width: Length,
@@ -32,8 +44,8 @@ export const densityProfileLayerStruct = /*#__PURE__*/ struct(
 
 export const densityProfileStruct = /*#__PURE__*/ struct(
   {
-    layer0: densityProfileLayerStruct.layout.name!,
-    layer1: densityProfileLayerStruct.layout.name!
+    layer0: structName(densityProfileLayerStruct),
+    layer1: structName(densityProfileLayerStruct)
   },
   'DensityProfile'
 )
@@ -44,13 +56,13 @@ const atmosphereParametersLayout = {
   sunAngularRadius: Angle,
   bottomRadius: Length,
   topRadius: Length,
-  rayleighDensity: densityProfileStruct.layout.name!,
+  rayleighDensity: structName(densityProfileStruct),
   rayleighScattering: ScatteringSpectrum,
-  mieDensity: densityProfileStruct.layout.name!,
+  mieDensity: structName(densityProfileStruct),
   mieScattering: ScatteringSpectrum,
   mieExtinction: ScatteringSpectrum,
   miePhaseFunctionG: Dimensionless,
-  absorptionDensity: densityProfileStruct.layout.name!,
+  absorptionDensity: structName(densityProfileStruct),
   absorptionExtinction: ScatteringSpectrum,
   groundAlbedo: DimensionlessSpectrum,
   minCosLight: Dimensionless,
